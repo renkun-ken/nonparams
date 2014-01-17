@@ -21,20 +21,20 @@ test.table <- expand.grid(sample=samples,size=sizes,
                           stringsAsFactors=FALSE)
 kest <- function(i,args,sample.settings) {
   settings <- sample.settings[[args$sample]]
-  sample <- do.call(paste("r",args$sample,sep=""),
+  sample <- do.call(sprintf("r%s",args$sample),
                     c(list(n=args$size),settings))
   kden <- density(sample,bw=args$bw,kernel=args$kernel)
-  den <- do.call(paste("d",args$sample,sep=""),
+  den <- do.call(sprintf("d%s",args$sample),
                   c(list(x=kden$x),settings))
   transform(args,made=mean(abs(den-kden$y)))
 }
 
 parallelStartSocket(cpus=4,show.info=FALSE)
-test.result <- do.call("rbind",
+test.result <- do.call(rbind,
                        lapply(1:nrow(test.table),
                               function(i,fun,...) {
-  print(paste("Running for row ",i))
-  do.call("rbind",parallelLapply(1:1000,fun,args=test.table[i,],
+  print(sprintf("Running for row %d",i))
+  do.call(rbind,parallelLapply(1:1000,fun,args=test.table[i,],
                                  sample.settings=sample.settings))
   },fun=kest,test.table=test.table,sample.settings=sample.settings))
 parallelStop()
@@ -103,7 +103,7 @@ simulate <- function(i,ade,range=c(0,1),size=1000) {
   sample.density.ade <- with(sample.density,ade(x,y,range,FALSE))
   sample.local.ade <- with(sample.local,ade(x,y,range,FALSE))
   sample.density.bounded.ade <- with(sample.density,ade(x,y,range,TRUE))
-  sample.local.bounded.ade <- with(sample.local,ade(x,y,range,TRUE))  
+  sample.local.bounded.ade <- with(sample.local,ade(x,y,range,TRUE))
   rbind(data.frame(method="kernel",
                    min=range[1],max=range[2],sample.size=size,
                    made=sample.density.ade$mean,
